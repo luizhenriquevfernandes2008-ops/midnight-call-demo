@@ -18,8 +18,15 @@ import subprocess
 import sys
 import zipfile
 
+# AQUI e a oficina (onde moram os scripts); RAIZ e a porta de entrada do
+# repositorio. Os pacotes prontos saem na RAIZ, em `dist/`, porque e la que
+# alguem procura — ninguem vai cavar dentro de `oficina/build/` atras do
+# executavel. O entulho do empacotador fica aqui dentro, longe da vista.
 AQUI = os.path.dirname(os.path.abspath(__file__))
+RAIZ = os.path.dirname(AQUI)
 DESTINO = os.path.join(AQUI, 'jogo')
+PASTA_BUILD = os.path.join(AQUI, 'build')
+PASTA_DIST = os.path.join(RAIZ, 'dist')
 
 # ⚠ O NOME DO EXECUTAVEL E O DO TITULO DO JOGO, e nao o da pasta do projeto.
 # Ele era "Chamado da Meia-Noite.exe" enquanto a janela e a tela de titulo
@@ -92,9 +99,17 @@ def achar_projeto():
         for raiz, pastas, _arq in os.walk(topo):
             pastas[:] = [p for p in pastas
                          if p not in ('.git', 'node_modules', '__pycache__')]
-            # nada que esteja DENTRO desta oficina conta: as copias que o
-            # proprio build gerou passariam na checagem e se auto-elegeriam
-            if os.path.commonpath([os.path.abspath(raiz), AQUI]) == AQUI:
+            # ⚠ NADA DE DENTRO DESTE REPOSITORIO CONTA. As copias que o
+            # proprio build gera (em `jogo/`, em `build/fonte/` e dentro dos
+            # pacotes prontos) passam na checagem de identidade — sao o jogo,
+            # afinal — e se auto-elegeriam como fonte. O build passaria a se
+            # alimentar da propria saida, e uma correcao feita no projeto
+            # nunca mais chegaria no pacote.
+            #
+            # A exclusao e a RAIZ inteira, e nao so a oficina: os pacotes
+            # saem em `dist/`, que fica um nivel acima daqui. Com a exclusao
+            # errada, uma rodada chegou a listar OITO copias do jogo.
+            if os.path.commonpath([os.path.abspath(raiz), RAIZ]) == RAIZ:
                 continue
             if e_o_projeto(raiz) and raiz not in achados:
                 achados.append(raiz)
@@ -169,7 +184,7 @@ LISTA_NEGRA = {'musica-casa.mp3', 'narrator.mp3',
 
 
 def limpar():
-    for pasta in (DESTINO, os.path.join(AQUI, 'build'), os.path.join(AQUI, 'dist')):
+    for pasta in (DESTINO, PASTA_BUILD, PASTA_DIST):
         if os.path.isdir(pasta):
             shutil.rmtree(pasta)
 
@@ -198,6 +213,24 @@ def ignorar(diretorio, nomes):
 #
 # Para empacotar o que esta no disco mesmo assim (testar uma mudanca antes
 # de commitar):  $env:TMC_SUJO = "1"
+#
+# ---------------------------------------------------------------------------
+# E QUAL COMMIT? UM ESCOLHIDO, NAO "O ULTIMO".
+# ---------------------------------------------------------------------------
+# ⚠ `HEAD` parece a escolha obvia e nao e. O jogo esta em desenvolvimento
+# ativo: entre um empacotamento e o seguinte, o `HEAD` andou de "Capitulo 4
+# escrito" para "Capitulo 4 NO JOGO" — e um rebuild de embalagem teria
+# colocado um capitulo inteiro, commitado minutos antes e nunca jogado por
+# ninguem, dentro de uma demo publica que se anuncia como tendo tres.
+#
+# Uma demo e uma promessa com escopo declarado. O escopo fica AQUI, escrito,
+# e muda quando alguem decide que muda — nao quando alguem commita.
+#
+#   COMMIT = None       -> o ultimo (bom para testar)
+#   COMMIT = '3f683c3'  -> aquele, e so aquele
+COMMIT = '3f683c3'      # Capitulos 1 a 3. O 4 existe, e nao entrou na demo.
+
+
 def fonte_do_jogo():
     if os.environ.get('TMC_SUJO') == '1':
         print('⚠ TMC_SUJO=1 — empacotando a pasta de trabalho, nao um commit.')
@@ -208,18 +241,26 @@ def fonte_do_jogo():
         print('⚠ o projeto nao e um repositorio git — empacotando o disco.')
         return PROJETO
 
+    alvo = COMMIT or 'HEAD'
     sujos = subprocess.run([git, '-C', PROJETO, 'status', '--porcelain'],
                            capture_output=True, text=True).stdout.strip()
-    ref = subprocess.run([git, '-C', PROJETO, 'log', '-1', '--format=%h %s'],
+    ref = subprocess.run([git, '-C', PROJETO, 'log', '-1', '--format=%h %s', alvo],
                          capture_output=True, text=True).stdout.strip()
+    if not ref:
+        raise SystemExit(f'commit {alvo} nao existe no projeto')
+    ultimo = subprocess.run([git, '-C', PROJETO, 'log', '-1', '--format=%h %s'],
+                            capture_output=True, text=True).stdout.strip()
+    if COMMIT and not ultimo.startswith(COMMIT):
+        print(f'  (o ultimo commit do projeto e outro: {ultimo})')
+        print('   se a demo deve passar a incluir isso, mude COMMIT no topo.')
 
-    fonte = os.path.join(AQUI, 'build', 'fonte')
+    fonte = os.path.join(PASTA_BUILD,'fonte')
     if os.path.isdir(fonte):
         shutil.rmtree(fonte)
     os.makedirs(fonte, exist_ok=True)
-    pacote = os.path.join(AQUI, 'build', 'fonte.zip')
+    pacote = os.path.join(PASTA_BUILD,'fonte.zip')
     r = subprocess.run([git, '-C', PROJETO, 'archive', '--format=zip',
-                        '-o', pacote, 'HEAD'], capture_output=True, text=True)
+                        '-o', pacote, alvo], capture_output=True, text=True)
     if r.returncode != 0:
         print(r.stderr[-2000:])
         raise SystemExit('git archive falhou')
@@ -288,8 +329,8 @@ FICHA = f"""VSVersionInfo(
 
 def escrever_ficha():
     """Grava o arquivo de versao que o PyInstaller carimba no .exe."""
-    os.makedirs(os.path.join(AQUI, 'build'), exist_ok=True)
-    caminho = os.path.join(AQUI, 'build', 'versao.txt')
+    os.makedirs(PASTA_BUILD, exist_ok=True)
+    caminho = os.path.join(PASTA_BUILD,'versao.txt')
     with open(caminho, 'w', encoding='utf-8') as f:
         f.write(FICHA)
     return caminho
@@ -350,7 +391,7 @@ def polir_para_demo():
 
 def pyinstaller(modo, ficha):
     """modo: 'onefile' ou 'onedir'."""
-    saida = os.path.join(AQUI, 'dist', modo)
+    saida = os.path.join(PASTA_BUILD, 'saida', modo)
     cmd = [
         sys.executable, '-m', 'PyInstaller',
         '--noconfirm', '--clean',
@@ -361,8 +402,8 @@ def pyinstaller(modo, ficha):
         '--version-file', ficha,
         '--add-data', f'{DESTINO}{os.pathsep}jogo',
         '--distpath', saida,
-        '--workpath', os.path.join(AQUI, 'build', modo),
-        '--specpath', os.path.join(AQUI, 'build'),
+        '--workpath', os.path.join(PASTA_BUILD,modo),
+        '--specpath', PASTA_BUILD,
         # O pywebview carrega o backend do Windows por nome, em tempo de
         # execucao. Sem isto o PyInstaller nao ve a dependencia, nao empacota
         # nada dela, e o exe abre direto no navegador achando que a maquina
@@ -370,8 +411,19 @@ def pyinstaller(modo, ficha):
         '--hidden-import', 'webview.platforms.winforms',
         '--hidden-import', 'clr_loader',
         '--hidden-import', 'pythonnet',
-        os.path.join(AQUI, 'lancador.py'),
     ]
+    # ⚠ A PASTA DE TRIPAS TEM NOME (so no modo pasta — no arquivo unico nao
+    # existe pasta nenhuma). Por padrao o PyInstaller a chama de `_internal`,
+    # e quem extraisse o zip via um `_internal` com 196 arquivos chamados
+    # `cryptography-50.0.0.dist-info` e `setuptools` ao lado do jogo. Aquilo
+    # parecia coisa vazada, nao produto.
+    #
+    # Com um nome em portugues ela passa a ler como "os dados do jogo, nao
+    # mexa" — que e a cara de qualquer jogo instalado. O conteudo e o mesmo;
+    # a leitura e outra.
+    if modo == 'onedir':
+        cmd += ['--contents-directory', 'dados do jogo']
+    cmd.append(os.path.join(AQUI, 'lancador.py'))
     print(f'\n=== PyInstaller ({modo}) ===')
     r = subprocess.run(cmd, capture_output=True, text=True)
     if r.returncode != 0:
@@ -399,7 +451,7 @@ def mb(n):
 #     The Midnight Call - Demo.zip            <- a versao em pasta, zipada
 #     _bruto/                                 <- as saidas cruas
 def arrumar(saida_onefile, saida_onedir):
-    dist = os.path.join(AQUI, 'dist')
+    dist = PASTA_DIST
     bruto = os.path.join(dist, '_bruto')
     os.makedirs(bruto, exist_ok=True)
 

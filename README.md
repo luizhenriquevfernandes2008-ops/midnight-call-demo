@@ -38,7 +38,7 @@ os pés dele ficam presos no chão, de propósito.
 
 ## Como jogar
 
-1. Baixe **`The Midnight Call.exe`** na [página de download](../../releases/latest)
+1. Baixe **`The-Midnight-Call-Demo.exe`** na [página de download](../../releases/latest)
 2. Dois cliques
 3. Aperte qualquer tecla
 
@@ -90,7 +90,7 @@ de endereço.
 
 **Este repositório contém a oficina, não o jogo.** O código do jogo vive em
 [midnight-call-2026](https://github.com/luizhenriquevfernandes2008-ops/midnight-call-2026).
-Aqui ficam os scripts que transformam aquilo num `.exe`:
+Aqui, dentro de `oficina/`, ficam os scripts que transformam aquilo num `.exe`:
 
 | | |
 |---|---|
@@ -102,12 +102,19 @@ Aqui ficam os scripts que transformam aquilo num `.exe`:
 Para reconstruir:
 
 ```bash
-python construir.py
+cd oficina && python construir.py
 ```
 
-Ele acha o projeto sozinho, exporta o último commit, tira o que não pode ser
-distribuído, e gera o `.exe` e o `.zip`. Depois, `python verificar.py`
-confere que o pacote **roda de verdade** — não que ele compilou.
+Ele acha o projeto sozinho, exporta **um commit escolhido** (não o último — o
+jogo está em desenvolvimento ativo, e o escopo da demo é uma decisão, não um
+efeito colateral de quem commitou por último), tira o que não pode ser
+distribuído, esconde as ferramentas de desenvolvimento do menu, e gera o
+`.exe` e o `.zip` em `dist/`.
+
+Depois, `python verificar.py` confere que o pacote **roda de verdade** — não
+que ele compilou. Ele abre a janela, espera o jogo terminar o boot, e mede: as
+33 fases construídas, o estado da tela inicial, o canvas, o áudio, e a tela
+cheia esticando a janela de verdade.
 
 ---
 

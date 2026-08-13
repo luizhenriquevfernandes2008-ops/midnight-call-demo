@@ -5,12 +5,12 @@
 # 17 MB dentro do historico ficaria la para sempre, em toda copia que
 # alguem clonasse — e um por versao.
 
-# a copia do jogo, gerada pelo construir.py a partir de um commit
-/jogo/
-
-# lixo do PyInstaller e os pacotes prontos
-/build/
+# os pacotes prontos
 /dist/
+
+# a copia do jogo (extraida de um commit) e o entulho do PyInstaller
+/oficina/jogo/
+/oficina/build/
 
 __pycache__/
 *.pyc
