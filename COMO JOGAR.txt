@@ -1,0 +1,73 @@
+
+   T H E   M I D N I G H T   C A L L
+   ---------------------------------
+   Demo 1.0
+
+
+   COMO COMECAR
+
+   De dois cliques em  "The Midnight Call.exe"  e aperte qualquer tecla.
+
+   Se o Windows mostrar uma tela azul dizendo "O Windows protegeu o seu
+   computador", clique em MAIS INFORMACOES e depois em EXECUTAR ASSIM
+   MESMO. Isso aparece em todo programa que nao tem assinatura digital
+   paga; nao e sinal de problema com o jogo.
+
+
+   O QUE VOCE PRECISA TER
+
+   Windows 10 ou 11, 64 bits. Nada alem disso.
+
+   Nao precisa instalar Python, Java, Unity, nem nada. Esta tudo dentro
+   do executavel. Nao instala nada na sua maquina, nao mexe no registro
+   e nao precisa de internet.
+
+   O jogo salva em 10 espacos, guardados no seu proprio computador.
+
+
+   CONTROLES
+
+   ANDAR ................. A / D   ou setas
+   CORRER ................ SHIFT (segurar)
+   INTERAGIR / FALAR ..... E
+   SOCAR ................. J  ou  ESPACO
+
+   MIRAR ................. BOTAO DIREITO (segurar)
+   SUBIR / DESCER O CANO . MOUSE para cima e para baixo
+   ATIRAR ................ BOTAO ESQUERDO
+   RECARREGAR ............ R
+
+   CASACO (inventario) ... TAB          -- nao pausa o jogo
+   CADERNO ............... Q
+   MAPA .................. M
+   ISQUEIRO .............. F
+   PRENDER A RESPIRACAO .. SHIFT, quando escondido
+
+   No caderno:  X segura uma pagina, X numa segunda junta as duas.
+                Z troca entre ANOTACOES e DOCUMENTOS.
+
+   PAUSAR / VOLTAR ....... ESC
+   TELA CHEIA ............ F11   (ou em OPCOES)
+   PULAR A ABERTURA ...... segure ESC ou ENTER
+
+
+   DUAS COISAS QUE VALE SABER
+
+   Mirando, os pes dele ficam presos no chao. E de proposito: isto e um
+   jogo de terror, nao de acao. Correr e atirar ao mesmo tempo nao e uma
+   opcao que este personagem tem.
+
+   O jogo comeca no Capitulo 1, mas os tres capitulos estao liberados no
+   menu, em CAPITULOS. Escolher um nao apaga nenhum arquivo salvo.
+
+
+   SE ALGUMA COISA QUEBRAR
+
+   O jogo tem uma tela de erro propria. Se ela aparecer, clique em
+   COPIAR ERRO e mande o texto — e ele que diz o que aconteceu.
+
+
+   ---------------------------------------------------------------
+   Feito por Luiz Fernandes.
+   Todo o som do jogo, menos nada, e sintetizado em tempo real:
+   nao ha um unico arquivo de audio dentro deste pacote.

@@ -1,0 +1,117 @@
+THE MIDNIGHT CALL — notas da oficina
+==================================================================
+
+O README.md conta o que e e como jogar. Este arquivo e a parte chata: as
+decisoes que foram tomadas empacotando, e as armadilhas que ja pegaram
+alguem. Se voce so quer jogar, o README basta.
+
+Esta pasta NAO e o projeto. Ela LE o projeto e produz um .exe. O jogo
+continua rodando como sempre pelo servidor de dev e pelo JOGO_OFFLINE.html
+— nada aqui e dependencia dele.
+
+
+COMO CONSTRUIR
+------------------------------------------------------------------
+
+    python construir.py      monta os dois pacotes
+    python verificar.py      prova que o pacote RODA (nao que compilou)
+
+O `construir.py` acha o projeto sozinho, exporta o ultimo commit, tira o
+que nao pode ser distribuido, aplica os polimentos de demo e gera:
+
+    dist\The Midnight Call.exe            <- o unico arquivo a enviar
+    dist\The Midnight Call - Demo.zip     <- a versao em pasta
+    dist\_bruto\                          <- as saidas cruas do PyInstaller
+
+Duas chaves de ambiente, para os casos fora da curva:
+
+    $env:TMC_PROJETO = "C:\caminho"   aponta o projeto na mao
+    $env:TMC_SUJO    = "1"            empacota o disco, e nao um commit
+    $env:TMC_SEM_JANELA = "1"         forca o plano B (abrir no navegador)
+
+
+QUATRO COISAS QUE JA DERAM ERRADO AQUI
+------------------------------------------------------------------
+
+1. CAMINHO DO PROJETO ESCRITO NA MAO. Quebrou no dia em que as pastas
+   foram reorganizadas. Pior: a busca que entrou no lugar aceitava
+   "qualquer pasta com index.html e js/main.js" e pegou primeiro uma
+   COPIA VELHA do jogo, e depois quase pegou OUTRO JOGO (DUNGEON GOLD)
+   que tem a mesma forma. Hoje a checagem procura o nome do jogo dentro
+   do index.html e o documento mestre — identidade, nao forma.
+
+2. BUILD SAINDO DA PASTA DE TRABALHO. No dia do empacotamento, outra
+   frente estava implementando o Capitulo 4 nos mesmos arquivos. O pacote
+   pegou o estado anterior por SORTE. Hoje o build sai de um COMMIT, via
+   `git archive`, e avisa quantos arquivos modificados ficaram de fora.
+
+3. A JANELA NAO ESTICAVA. `requestFullscreen()` dentro de um WebView
+   embutido nao da erro, nao rejeita, e nao faz nada — quem tem que
+   esticar e o programa hospedeiro. O jogo publica um gancho opcional
+   (`window.__telaCheia`) e o lancador o preenche chamando a janela
+   nativa. Fora do .exe, o jogo usa a API do navegador normalmente.
+
+4. A PONTE TRAVAVA ANTES DE ABRIR. A janela foi guardada num atributo
+   PUBLICO do objeto exposto ao JavaScript; o pywebview varre os atributos
+   publicos para espelhar o objeto e entrou em recursao infinita. Com
+   `self._janela`, so os metodos atravessam.
+
+
+O QUE NAO VAI NO PACOTE, E POR QUE
+------------------------------------------------------------------
+
+A pasta de audio do pacote fica VAZIA. O jogo da demo e 100% som
+sintetizado, que sempre foi o padrao do projeto.
+
+  musica-casa.mp3   110 MB, contra 17 do pacote inteiro — e veio do
+                    YouTube. Sem ela entra o piano sintetizado.
+                    PARA INCLUIR: corte 1 a 3 min que fechem em loop,
+                    exporte a 128 kbps, e tire o nome da LISTA_NEGRA.
+
+  narrator.mp3      a dublagem da abertura. A gravacao nao corresponde ao
+                    roteiro (bug B-20: 60,76s de audio contra 77s de
+                    texto, correlacao 0,15). Voz dizendo uma coisa com a
+                    legenda dizendo outra e pior que voz nenhuma.
+                    A abertura roda igual sem ela, pelas legendas.
+
+Tambem ficam de fora as ferramentas, os testes, o documento mestre, o
+roteiro e o .git. O jogador recebe o jogo, nao a oficina.
+
+
+OS POLIMENTOS DE DEMO
+------------------------------------------------------------------
+
+O `construir.py` aplica dois patches NA COPIA (nunca no projeto):
+
+  - tira ARENA DE COMBATE e SALA DE TESTE do menu de titulo: sao salas de
+    desenvolvimento, e nao tem o que fazer numa demo;
+  - troca o rodape "VERSAO DE TESTE 0.1 — FATIA JOGAVEL" por
+    "DEMO 1.0 — CAPITULOS 1 A 3".
+
+⚠ Os dois EXPLODEM o build se nao acharem o trecho esperado. Patch por
+texto envelhece mal, e uma substituicao que falha em silencio mandaria a
+sala de teste junto com a demo. Se explodir, e so atualizar a lista
+POLIMENTOS no construir.py.
+
+
+A FICHA DO EXECUTAVEL
+------------------------------------------------------------------
+
+Botao direito no .exe > Propriedades > Detalhes mostra nome, versao e
+autor. Sem isso os campos ficam vazios, e nada denuncia mais rapido que a
+coisa foi empacotada as pressas. Os valores estao no topo do
+construir.py (NOME, VERSAO, VERSAO_TEXTO, AUTOR).
+
+
+DUAS COISAS QUE VAO ACONTECER NA DISTRIBUICAO
+------------------------------------------------------------------
+
+1. O SmartScreen vai avisar na primeira abertura, em qualquer maquina.
+   Acontece com todo programa sem assinatura digital. Some so com
+   certificado de assinatura de codigo (uns 200 a 400 dolares por ano) —
+   vale quando o jogo for vendido, nao numa demo.
+
+2. Algum antivirus pode reclamar do .exe unico, que e falso positivo
+   classico de PyInstaller (ele se descompacta ao abrir). A versao em
+   PASTA costuma passar limpa, porque nao se descompacta. E por isso que
+   os dois formatos existem.

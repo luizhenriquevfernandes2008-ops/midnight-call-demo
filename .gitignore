@@ -1,0 +1,16 @@
+# A oficina versiona as FERRAMENTAS, nao o que elas produzem.
+#
+# O .exe e o .zip nao entram em commit: eles vao para os Releases, que e
+# onde as pessoas baixam e onde o GitHub conta os downloads. Binario de
+# 17 MB dentro do historico ficaria la para sempre, em toda copia que
+# alguem clonasse — e um por versao.
+
+# a copia do jogo, gerada pelo construir.py a partir de um commit
+/jogo/
+
+# lixo do PyInstaller e os pacotes prontos
+/build/
+/dist/
+
+__pycache__/
+*.pyc
